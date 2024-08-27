@@ -1,10 +1,12 @@
 import 'package:fast_food/insert_product.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-
 import 'db_helper.dart';
+import 'package:intl/intl.dart';
 
 bool isProduction = false;
 
@@ -33,7 +35,7 @@ class FastFoodPage extends StatefulWidget {
 
 class _FastFoodPageState extends State<FastFoodPage> {
   List<Map<String, dynamic>> _products = [];
-  List<Map<String, dynamic>> _selectedProducts = [];
+  final List<Map<String, dynamic>> _selectedProducts = [];
 
   @override
   void initState() {
@@ -79,6 +81,9 @@ class _FastFoodPageState extends State<FastFoodPage> {
         .map((p) => p['count'] * p['price'])
         .reduce((a, b) => a + b);
 
+    // Current date
+    String currentDate = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
     pdf.addPage(
       pw.Page(
         pageFormat: const PdfPageFormat(58 * 2.835, double.infinity),
@@ -88,27 +93,52 @@ class _FastFoodPageState extends State<FastFoodPage> {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // Manzil, telefon raqami va fast food raqami
-                pw.Text('Manzil: $address',
-                    style: pw.TextStyle(
-                        fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                pw.Text('Telefon Raqami: $clientPhone',
-                    style: const pw.TextStyle(fontSize: 10)),
-                pw.Text('Fast Food Raqami: $fastFoodNumber',
-                    style: const pw.TextStyle(fontSize: 10)),
-                pw.SizedBox(height: 10),
+                // Cafe Title
+                pw.Text(
+                  'Food Cafe',
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: 4),
 
-                // Mahsulotlar ro‘yxati
-                pw.Text('Tanlangan Mahsulotlar:',
-                    style: pw.TextStyle(
-                        fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  '+998 90 778 6655',
+                  style: pw.TextStyle(
+                      fontSize: 12, fontWeight: pw.FontWeight.bold),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  'Manzil: O\'ram choyxonasi ro\'parasida',
+                  style: const pw.TextStyle(fontSize: 10),
+                  textAlign: pw.TextAlign.start,
+                ),
+                pw.SizedBox(height: 2),
+
+                // Card Number
+                pw.Text(
+                  'Karta: 5614-6818-1840-7672\nSattorov A',
+                  style: const pw.TextStyle(fontSize: 10),
+                  textAlign: pw.TextAlign.start,
+                ),
+                pw.SizedBox(height: 2),
+
+                // Current Date and Time
+                pw.Text(
+                  'Sana: $currentDate',
+                  style: const pw.TextStyle(fontSize: 10),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: 10),
                 pw.Divider(), // Separator line
                 pw.ListView.builder(
                   itemCount: _selectedProducts.length,
                   itemBuilder: (context, index) {
                     final product = _selectedProducts[index];
                     final subtotal = product['price'] * product['count'];
-                    // totalAmount += subtotal; // Jami summaga qo'shish
                     return pw.Padding(
                       padding: const pw.EdgeInsets.symmetric(
                           vertical: 2.0), // Reduced vertical padding
@@ -131,17 +161,41 @@ class _FastFoodPageState extends State<FastFoodPage> {
                     );
                   },
                 ),
-                pw.SizedBox(height: 10),
                 pw.Divider(), // Another separator line
                 pw.SizedBox(height: 5),
 
                 // Jami summa
                 pw.Text(
-                  'Jami Summa: $totalAmount',
+                  'Jami Summa: $totalAmount UZS',
                   style: pw.TextStyle(
                     fontSize: 12,
                     fontWeight: pw.FontWeight.bold,
                   ),
+                  textAlign: pw.TextAlign.right,
+                ),
+                pw.SizedBox(height: 8),
+
+                pw.Text(
+                  'Tel: $clientPhone',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.Text(
+                  'Manzil: $address',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                  ),
+                  textAlign: pw.TextAlign.center,
+                ),
+
+                pw.Text(
+                  'Haridiging uchun rahmat :)',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                  ),
+                  textAlign: pw.TextAlign.center,
                 ),
               ],
             ),
@@ -151,7 +205,13 @@ class _FastFoodPageState extends State<FastFoodPage> {
     );
 
     await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+
+    // Clear selected products after printing
+    setState(() {
+      _selectedProducts.clear();
+    });
   }
 
   Future<void> _navigateToInsertProduct() async {
@@ -168,7 +228,22 @@ class _FastFoodPageState extends State<FastFoodPage> {
   TextEditingController clientNameController = TextEditingController();
   TextEditingController clientPhoneController = TextEditingController();
   TextEditingController fastFoodNumberController = TextEditingController();
+
+  final FocusNode _clientNameFocusNode = FocusNode();
+  final FocusNode _clientPhoneFocusNode = FocusNode();
+  final FocusNode _fastFoodNumberFocusNode = FocusNode();
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = "";
+  @override
+  void dispose() {
+    _clientNameFocusNode.dispose();
+    _clientPhoneFocusNode.dispose();
+    _fastFoodNumberFocusNode.dispose();
+    _searchFocusNode.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     fastFoodNumberController.text = "+998907786655";
@@ -187,7 +262,8 @@ class _FastFoodPageState extends State<FastFoodPage> {
                   onPressed: () async {
                     await DatabaseHelper.instance.deleteDB();
                   },
-                  icon: const Icon(Icons.delete_forever))
+                  icon: const Icon(Icons.delete_forever),
+                ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -201,19 +277,25 @@ class _FastFoodPageState extends State<FastFoodPage> {
               children: [
                 const SizedBox(height: 6),
                 // Search Field
-                TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value; // Update search query
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Mahsulotlarni qidirish',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: TextField(
+                    focusNode: _searchFocusNode,
+                    onTap: () {
+                      _searchFocusNode.requestFocus();
+                    },
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value; // Update search query
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Mahsulotlarni qidirish',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
-
                 // Filter products based on the search query
                 Expanded(
                   child: ListView.builder(
@@ -275,31 +357,48 @@ class _FastFoodPageState extends State<FastFoodPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 6),
+                      // Address Field
                       TextField(
                         controller: clientNameController,
+                        focusNode: _clientNameFocusNode,
+                        onTap: () {
+                          _clientNameFocusNode.requestFocus();
+                        },
                         decoration: const InputDecoration(
                           labelText: 'Manzil',
                           border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 6),
+                      // Phone Number Field
                       TextField(
                         controller: clientPhoneController,
+                        focusNode: _clientPhoneFocusNode,
+                        onTap: () {
+                          _clientPhoneFocusNode.requestFocus();
+                        },
                         decoration: const InputDecoration(
                           labelText: 'Telefon Raqami',
                           border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 6),
+                      // Fast Food Number Field
                       TextField(
                         controller: fastFoodNumberController,
+                        focusNode: _fastFoodNumberFocusNode,
+                        onTap: () {
+                          _fastFoodNumberFocusNode.requestFocus();
+                        },
                         decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Fast Food Raqami'),
+                          labelText: 'Fast Food Raqami',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 6),
                 // Button for printing selected products
                 ElevatedButton(
                   onPressed: () {
