@@ -36,6 +36,7 @@ class FastFoodPage extends StatefulWidget {
 class _FastFoodPageState extends State<FastFoodPage> {
   List<Map<String, dynamic>> _products = [];
   final List<Map<String, dynamic>> _selectedProducts = [];
+  Printer? _cachedPrinter;
 
   @override
   void initState() {
@@ -72,145 +73,165 @@ class _FastFoodPageState extends State<FastFoodPage> {
     });
   }
 
+  Future<void> _selectPrinter(BuildContext context) async {
+    _cachedPrinter = await Printing.pickPrinter(context: context);
+  }
+
   Future<void> _printSelectedProducts(
-      String address, String clientPhone, String fastFoodNumber) async {
-    final pdf = pw.Document();
+    String address,
+    String clientPhone,
+    String fastFoodNumber,
+  ) async {
+    if (_cachedPrinter == null) {
+      await _selectPrinter(context);
+    }
 
-    // Jami summani hisoblash
-    int totalAmount = _selectedProducts
-        .map((p) => p['count'] * p['price'])
-        .reduce((a, b) => a + b);
+    if (_cachedPrinter != null) {
+      final pdf = pw.Document();
 
-    // Current date
-    String currentDate = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+      // Calculate total amount
+      int totalAmount = _selectedProducts
+          .map((p) => p['count'] * p['price'])
+          .reduce((a, b) => a + b);
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: const PdfPageFormat(58 * 2.835, double.infinity),
-        build: (pw.Context context) {
-          return pw.Padding(
-            padding: const pw.EdgeInsets.all(4.0), // Overall padding
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                // Cafe Title
-                pw.Text(
-                  'Food Cafe',
-                  style: pw.TextStyle(
-                    fontSize: 22,
-                    fontWeight: pw.FontWeight.bold,
+      // Current date
+      String currentDate =
+          DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
+      // Add the receipt content to the PDF
+      pdf.addPage(
+        pw.Page(
+          pageFormat: const PdfPageFormat(58 * 2.835, double.infinity),
+          build: (pw.Context context) {
+            return pw.Padding(
+              padding: const pw.EdgeInsets.all(4.0),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Food Cafe',
+                    style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.center,
                   ),
-                  textAlign: pw.TextAlign.center,
-                ),
-                pw.SizedBox(height: 4),
-
-                pw.Text(
-                  '+998 90 778 6655',
-                  style: pw.TextStyle(
-                      fontSize: 12, fontWeight: pw.FontWeight.bold),
-                  textAlign: pw.TextAlign.center,
-                ),
-                pw.SizedBox(height: 2),
-                pw.Text(
-                  'Manzil: O\'ram choyxonasi ro\'parasida',
-                  style: const pw.TextStyle(fontSize: 10),
-                  textAlign: pw.TextAlign.start,
-                ),
-                pw.SizedBox(height: 2),
-
-                // Card Number
-                pw.Text(
-                  'Karta: 5614-6818-1840-7672\nSattorov A',
-                  style: const pw.TextStyle(fontSize: 10),
-                  textAlign: pw.TextAlign.start,
-                ),
-                pw.SizedBox(height: 2),
-
-                // Current Date and Time
-                pw.Text(
-                  'Sana: $currentDate',
-                  style: const pw.TextStyle(fontSize: 10),
-                  textAlign: pw.TextAlign.center,
-                ),
-                pw.SizedBox(height: 10),
-                pw.Divider(), // Separator line
-                pw.ListView.builder(
-                  itemCount: _selectedProducts.length,
-                  itemBuilder: (context, index) {
-                    final product = _selectedProducts[index];
-                    final subtotal = product['price'] * product['count'];
-                    return pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(
-                          vertical: 2.0), // Reduced vertical padding
-                      child: pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Expanded(
-                            child: pw.Text(
-                              '${product['name']}',
-                              style: const pw.TextStyle(fontSize: 10),
-                              maxLines: 1, // Prevents overflow
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    '+998 90 778 6655',
+                    style: pw.TextStyle(
+                        fontSize: 12, fontWeight: pw.FontWeight.bold),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    'Manzil: O\'ram choyxonasi ro\'parasida',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    'Karta: 5614-6818-1840-7672\nSattorov A',
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    'Sana: $currentDate',
+                    style: const pw.TextStyle(fontSize: 10),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                  pw.SizedBox(height: 10),
+                  pw.Divider(),
+                  pw.ListView.builder(
+                    itemCount: _selectedProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _selectedProducts[index];
+                      final subtotal = product['price'] * product['count'];
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2.0),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Expanded(
+                              child: pw.Text(
+                                '${product['name']}',
+                                style: const pw.TextStyle(fontSize: 10),
+                                maxLines: 1,
+                              ),
                             ),
-                          ),
-                          pw.Text(
-                            '${product['count']} x ${product['price']} = $subtotal',
-                            style: const pw.TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                pw.Divider(), // Another separator line
-                pw.SizedBox(height: 5),
-
-                // Jami summa
-                pw.Text(
-                  'Jami Summa: $totalAmount UZS',
-                  style: pw.TextStyle(
-                    fontSize: 12,
-                    fontWeight: pw.FontWeight.bold,
+                            pw.Text(
+                              '${product['count']} x ${product['price']} = $subtotal',
+                              style: const pw.TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                  textAlign: pw.TextAlign.right,
-                ),
-                pw.SizedBox(height: 8),
-
-                pw.Text(
-                  'Tel: $clientPhone',
-                  style: pw.TextStyle(
-                    fontSize: 10,
+                  pw.Divider(),
+                  pw.SizedBox(height: 5),
+                  pw.Text(
+                    'Jami Summa: $totalAmount UZS',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.right,
                   ),
-                  textAlign: pw.TextAlign.center,
-                ),
-                pw.Text(
-                  'Manzil: $address',
-                  style: pw.TextStyle(
-                    fontSize: 10,
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    'Tel: $clientPhone',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                    ),
+                    textAlign: pw.TextAlign.center,
                   ),
-                  textAlign: pw.TextAlign.center,
-                ),
-
-                pw.Text(
-                  'Haridiging uchun rahmat :)',
-                  style: pw.TextStyle(
-                    fontSize: 10,
+                  pw.Text(
+                    'Manzil: $address',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                    ),
+                    textAlign: pw.TextAlign.center,
                   ),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+                  pw.Text(
+                    'Haridingiz uchun rahmat :)',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-    );
+      // Directly print the document using the selected printer
+      try {
+        await Printing.directPrintPdf(
+          printer: _cachedPrinter!,
+          onLayout: (PdfPageFormat format) async => pdf.save(),
+          name: "fast_food_chek.pdf",
+        );
+      } catch (e) {
+        print('Error printing: $e');
+       }
 
-    // Clear selected products after printing
+       clearTextFieldTexts();
+    } else {
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No printer selected!'),
+        ),
+      );
+    }
+  }
+
+  clearTextFieldTexts() {
     setState(() {
       _selectedProducts.clear();
+      clientNameController.clear();
+      clientPhoneController.clear();
     });
   }
 
@@ -234,6 +255,7 @@ class _FastFoodPageState extends State<FastFoodPage> {
   final FocusNode _fastFoodNumberFocusNode = FocusNode();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = "";
+
   @override
   void dispose() {
     _clientNameFocusNode.dispose();
@@ -256,6 +278,11 @@ class _FastFoodPageState extends State<FastFoodPage> {
             onPressed: _loadProducts,
             icon: const Icon(Icons.refresh),
           ),
+          IconButton(
+              onPressed: () {
+                _selectPrinter(context);
+              },
+              icon: Icon(Icons.print)),
           isProduction
               ? Container()
               : IconButton(
@@ -273,79 +300,143 @@ class _FastFoodPageState extends State<FastFoodPage> {
       body: Row(
         children: [
           Expanded(
-            child: Column(
-              children: [
-                const SizedBox(height: 6),
-                // Search Field
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: TextField(
-                    focusNode: _searchFocusNode,
-                    onTap: () {
-                      _searchFocusNode.requestFocus();
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value; // Update search query
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Mahsulotlarni qidirish',
-                      border: OutlineInputBorder(),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 6),
+                  // Search Field
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: TextField(
+                      focusNode: _searchFocusNode,
+                      onTap: () {
+                        _searchFocusNode.requestFocus();
+                      },
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value; // Update search query
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Mahsulotlarni qidirish',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                // Filter products based on the search query
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _products.where((product) {
-                      // Filtering logic: check if product name contains the search query
-                      return product['name']
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase());
-                    }).length,
-                    itemBuilder: (context, index) {
-                      final product = _products.where((product) {
+                  const SizedBox(height: 6),
+                  // Filter products based on the search query and display in a grid
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        childAspectRatio: 3 / 2,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
+                      ),
+                      itemCount: _products.where((product) {
                         return product['name']
                             .toLowerCase()
                             .contains(_searchQuery.toLowerCase());
-                      }).toList()[index]; // Get the filtered product
+                      }).length,
+                      itemBuilder: (context, index) {
+                        final product = _products.where((product) {
+                          return product['name']
+                              .toLowerCase()
+                              .contains(_searchQuery.toLowerCase());
+                        }).toList()[index]; // Get the filtered product
 
-                      return Card(
-                        child: ListTile(
-                          title: Text(product['name']),
-                          subtitle: Text('${product['price']}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () => _addProduct(product),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_forever),
-                                onPressed: () async {
-                                  int productIdToDelete = product['id'];
-                                  int result = await DatabaseHelper.instance
-                                      .deleteProduct(productIdToDelete);
+                        return InkWell(
+                          onTap: () {
+                            _addProduct(product);
+                          },
+                          child: Card(
+                            child: Stack(
+                              children: [
+                                // Product Info
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        product['name'],
+                                        style: const TextStyle(fontSize: 16.0),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8.0),
+                                      Text(
+                                        '${product['price']}',
+                                        style: const TextStyle(fontSize: 14.0),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Delete Button Positioned at the bottom-right
+                                Positioned(
+                                  bottom: 4,
+                                  left: 4,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_forever,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () async {
+                                      // Show confirmation dialog
+                                      bool? confirmDelete =
+                                          await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text(
+                                              'Mahsulotni o\'chirish'),
+                                          content: const Text(
+                                              'Siz chindan ham ushbu mahsulotni o\'chirmoqchimisiz?'),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('Bekor qilish'),
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(false);
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: const Text('O\'chirish'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(true);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
 
-                                  if (result > 0) {
-                                    print('Product deleted successfully.');
-                                    _loadProducts();
-                                  } else {
-                                    print('Failed to delete product.');
-                                  }
-                                },
-                              ),
-                            ],
+                                      if (confirmDelete == true) {
+                                        // Perform delete operation if confirmed
+                                        int productIdToDelete = product['id'];
+                                        int result = await DatabaseHelper
+                                            .instance
+                                            .deleteProduct(productIdToDelete);
+
+                                        if (result > 0) {
+                                          print(
+                                              'Product deleted successfully.');
+                                          _loadProducts();
+                                        } else {
+                                          print('Failed to delete product.');
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Expanded(
@@ -382,7 +473,7 @@ class _FastFoodPageState extends State<FastFoodPage> {
                           border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
                       // Fast Food Number Field
                       TextField(
                         controller: fastFoodNumberController,
