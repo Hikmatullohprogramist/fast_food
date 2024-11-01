@@ -40,7 +40,6 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    sqfliteFfiInit();
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
     return await databaseFactoryFfi.openDatabase(path,
@@ -60,25 +59,25 @@ class DatabaseHelper {
     )
     ''');
 
-    // Insert some initial data
+    // // Insert some initial data
     await db.insert('products', {'name': 'Lavash', 'price': 22000, 'count': 1});
     await db
         .insert('products', {'name': 'Shaurma', 'price': 20000, 'count': 1});
-    await db.insert('products', {'name': 'Burger', 'price': 18000, 'count': 1});
-    await db
-        .insert('products', {'name': 'Hot Dog', 'price': 15000, 'count': 1});
-    await db.insert('products', {'name': 'Pizza', 'price': 45000, 'count': 1});
-    await db.insert('products', {'name': 'Donar', 'price': 25000, 'count': 1});
-    await db.insert(
-        'products', {'name': 'Fried Chicken', 'price': 30000, 'count': 1});
-    await db.insert(
-        'products', {'name': 'Kartoshka Free', 'price': 12000, 'count': 1});
-    await db.insert('products', {'name': 'Sushi', 'price': 35000, 'count': 1});
-    await db.insert('products', {'name': 'Samsa', 'price': 10000, 'count': 1});
-    await db
-        .insert('products', {'name': 'Cheburek', 'price': 14000, 'count': 1});
-    await db.insert(
-        'products', {'name': 'Qovurilgan Baliq', 'price': 32000, 'count': 1});
+    // await db.insert('products', {'name': 'Burger', 'price': 18000, 'count': 1});
+    // await db
+    //     .insert('products', {'name': 'Hot Dog', 'price': 15000, 'count': 1});
+    // await db.insert('products', {'name': 'Pizza', 'price': 45000, 'count': 1});
+    // await db.insert('products', {'name': 'Donar', 'price': 25000, 'count': 1});
+    // await db.insert(
+    //     'products', {'name': 'Fried Chicken', 'price': 30000, 'count': 1});
+    // await db.insert(
+    //     'products', {'name': 'Kartoshka Free', 'price': 12000, 'count': 1});
+    // await db.insert('products', {'name': 'Sushi', 'price': 35000, 'count': 1});
+    // await db.insert('products', {'name': 'Samsa', 'price': 10000, 'count': 1});
+    // await db
+    //     .insert('products', {'name': 'Cheburek', 'price': 14000, 'count': 1});
+    // await db.insert(
+    //     'products', {'name': 'Qovurilgan Baliq', 'price': 32000, 'count': 1});
   }
 
   Future<List<Map<String, dynamic>>> getProducts() async {

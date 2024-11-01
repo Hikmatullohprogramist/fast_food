@@ -5,12 +5,14 @@ import 'package:flutter/widgets.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'db_helper.dart';
 import 'package:intl/intl.dart';
 
 bool isProduction = false;
 
 void main() {
+  sqfliteFfiInit();
   runApp(MyApp());
 
   isProduction = true;
