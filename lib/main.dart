@@ -180,21 +180,21 @@ class _FastFoodPageState extends State<FastFoodPage> {
                   pw.SizedBox(height: 8),
                   pw.Text(
                     'Tel: $clientPhone',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 10,
                     ),
                     textAlign: pw.TextAlign.center,
                   ),
                   pw.Text(
                     'Manzil: $address',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 10,
                     ),
                     textAlign: pw.TextAlign.center,
                   ),
                   pw.Text(
                     'Haridingiz uchun rahmat :)',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 10,
                     ),
                     textAlign: pw.TextAlign.center,
@@ -215,12 +215,12 @@ class _FastFoodPageState extends State<FastFoodPage> {
         );
       } catch (e) {
         print('Error printing: $e');
-       }
+      }
 
-       clearTextFieldTexts();
+      clearTextFieldTexts();
     } else {
-       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
           content: Text('No printer selected!'),
         ),
       );
@@ -282,7 +282,7 @@ class _FastFoodPageState extends State<FastFoodPage> {
               onPressed: () {
                 _selectPrinter(context);
               },
-              icon: Icon(Icons.print)),
+              icon: const Icon(Icons.print)),
           isProduction
               ? Container()
               : IconButton(

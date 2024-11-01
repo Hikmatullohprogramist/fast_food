@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     await databaseFactoryFfi.deleteDatabase(path);
 
-    print('Database deleted at: $path');
+    print('Database deleted at: $path');    
 
     _database = null;
   }

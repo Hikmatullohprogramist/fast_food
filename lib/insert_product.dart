@@ -25,7 +25,7 @@ class _InsertProductScreenState extends State<InsertProductScreen> {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text;
       final price = int.parse(_priceController.text);
-
+        
       await DatabaseHelper.instance.insertProduct({
         'name': name,
         'price': price,
